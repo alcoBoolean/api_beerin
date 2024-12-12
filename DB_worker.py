@@ -1,4 +1,4 @@
-import json
+import datetime
 import sqlite3
 
 
@@ -39,6 +39,25 @@ class DB_worker:
 
         # Преобразуем в словарь
         return dict(zip(columns, row))
+
+    # Функция для регистрации пользователя
+    def register_user(self, login: str, password: str, phone_number: str):
+        try:
+            # hashed_password = hash_password(password)  # TODO Хешируем пароль
+            self.cursor.execute("""
+            INSERT INTO users (login, password, phone_number)
+            VALUES (?, ?, ?)
+            """, (login, password, phone_number))
+
+            self.connection.commit()
+            print("Пользователь успешно зарегистрирован!")
+            return {"success": True, "time": datetime.datetime.now()}
+        except sqlite3.IntegrityError as e:
+            print("Ошибка: Пользователь с таким именем или email уже существует.")
+            return {"error_code": 1, "error": "The user has already been created.", "time": datetime.datetime.now()}
+        except Exception as e:
+            print(f"Произошла ошибка: {e}")
+            return {"error_code": 0, "error": "Undetected error", "time": datetime.datetime.now()}
 
     def close(self):
         """
