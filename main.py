@@ -5,14 +5,14 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 
-from DB_worker import DB_worker
+from DbWorker import DbWorker
 
 app = FastAPI()
 
 app.mount("/item_image", StaticFiles(directory="item_image"), name="item_image")  # Выдача изображений на предметы
 app.mount("/user_image", StaticFiles(directory="user_image"), name="user_image")  # Выдача изображений на предметы
 
-db = DB_worker()
+db = DbWorker()
 
 
 # Получение списка всех элементов
@@ -44,6 +44,22 @@ async def registration_new_user(request: Request):
     else:
         return {"error": "Invalid headers", "time": datetime.datetime.now()}
 
+
+# Добавление в избранное
+@app.post("/like")
+async def reg_new_like_item(request: Request):
+    headers = request.headers
+    login = headers.get("login")
+    password = headers.get("password")
+    item_id = headers.get("item_id")
+    # TODO реализовать проверку на формат данных
+
+    if login and password and item_id:
+        print(login, password, int(item_id))
+        answer = db.add_favourites(login, password, int(item_id))
+        return answer
+    else:
+        return {"error": "Invalid headers", "time": datetime.datetime.now()}
 
 # Удаление элемента
 # @app.delete("/items/{item_id}")

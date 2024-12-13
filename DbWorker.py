@@ -2,7 +2,7 @@ import datetime
 import sqlite3
 
 
-class DB_worker:
+class DbWorker:
     def __init__(self, db_name="database.db"):
         """
         Инициализация подключения к базе данных.
@@ -42,6 +42,14 @@ class DB_worker:
 
     # Функция для регистрации пользователя
     def register_user(self, login: str, password: str, phone_number: str):
+        """
+        Регистрирует пользователя
+        :param login:
+        :param password:
+        :param phone_number:
+        :return:
+        """
+
         try:
             # hashed_password = hash_password(password)  # TODO Хешируем пароль
             self.cursor.execute("""
@@ -58,6 +66,50 @@ class DB_worker:
         except Exception as e:
             print(f"Произошла ошибка: {e}")
             return {"error_code": 0, "error": "Undetected error", "time": datetime.datetime.now()}
+
+    def add_favourites(self, login: str, password: str, item_id: int):
+        """
+        Добавляет или удаляет предмет из избранного
+        :param login:
+        :param password:
+        :param item_id:
+        :return:
+        """
+
+        self.cursor.execute("""
+                            SELECT id FROM users WHERE (login == ? AND password == ?)
+                            """, (login, password))
+        user_row = self.cursor.fetchone()
+        if not user_row:
+            return {"error": "The user is not logged in", "time": datetime.datetime.now()}
+        user_id = user_row[0]
+
+        self.cursor.execute("""
+                    SELECT item_id FROM favorites
+                    where user_id == ? AND item_id == ?;
+                    """, (user_id, item_id))
+        favorite_row = self.cursor.fetchone()
+
+        if favorite_row:  # существует такая строка
+            self.cursor.execute("""DELETE FROM favorites WHERE user_id == ? AND item_id == ?""",
+                                (user_id, item_id))
+            print("Предмет был удалён из избранного")  # todo Логгирование
+        else:
+            self.cursor.execute(
+                """
+                INSERT INTO favorites (user_id, item_id)
+                VALUES (?, ?)
+                """, (user_id, item_id))
+            print("Предмет был добавлен в избранное")
+
+        print(user_row)
+        try:
+            self.connection.commit()
+            return {'success': True, 'time': datetime.datetime.now()}
+        except Exception as e:
+            print(f"Произошла ошибка: {e}")
+            return {"error_code": 0, "error": "Undetected error",
+                    "time": datetime.datetime.now()}  # todo Вынести в метод ошибок
 
     def close(self):
         """
