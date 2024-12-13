@@ -112,6 +112,13 @@ class DbWorker:
                     "time": datetime.datetime.now()}  # todo Вынести в метод ошибок
 
     def get_list_of_favorites(self, login: str, password: str):
+        """
+        Получить список с полным набором характеристик предмета, который был добавлен в избранное пользователем
+        :param login:
+        :param password:
+        :return:
+        """
+
         self.cursor.execute("""
         SELECT id FROM users WHERE  (login == ? AND password == ?)""", (login, password))
         row = self.cursor.fetchone()

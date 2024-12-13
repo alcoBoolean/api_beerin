@@ -67,6 +67,7 @@ async def reg_new_like_item(request: Request):
         return {"error": "Invalid headers", "time": datetime.datetime.now()}
 
 
+# Получить список всех избранных предметов
 @app.get("/like")
 async def get_list_of_favorites(request: Request):
     headers = request.headers
@@ -79,15 +80,6 @@ async def get_list_of_favorites(request: Request):
         return answer
     else:
         return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
-
-
-# Удаление элемента
-# @app.delete("/items/{item_id}")
-# def delete_item(item_id: str):
-#     if item_id in items:
-#         deleted_item = items.pop(item_id)
-#         return {"message": "Item deleted", "item": deleted_item}
-#     return {"error": "Item not found"}
 
 
 if __name__ == "__main__":
