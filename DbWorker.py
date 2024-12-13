@@ -111,6 +111,24 @@ class DbWorker:
             return {"error_code": 0, "error": "Undetected error",
                     "time": datetime.datetime.now()}  # todo Вынести в метод ошибок
 
+    def get_list_of_favorites(self, login: str, password: str):
+        self.cursor.execute("""
+        SELECT id FROM users WHERE  (login == ? AND password == ?)""", (login, password))
+        row = self.cursor.fetchone()
+        if not row:
+            return {"error": "The user is not logged in", "time": datetime.datetime.now()}
+
+        user_id = row[0]
+        print(user_id, type(user_id))
+        self.cursor.execute("""
+        SELECT * from items item_t 
+        JOIN favorites favor_t WHERE (item_t.id == favor_t.item_id AND favor_t.user_id == ?) """, (user_id,))
+
+        rows = self.cursor.fetchall()
+        columns = [column[0] for column in self.cursor.description]
+
+        return [dict(zip(columns, row)) for row in rows]
+
     def close(self):
         """
         Закрывает соединение с базой данных.

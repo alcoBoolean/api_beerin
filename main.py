@@ -22,9 +22,14 @@ async def get_items():
 
 
 # Получение элемента по ID
-@app.get("/items/{item_id}")
-async def get_item(item_id: str):
-    res = db.fetch_item_by_id(int(item_id))
+@app.get("/items/")
+async def get_item(item_id: int):
+    try:
+        res = db.fetch_item_by_id(int(item_id))
+    except ValueError as ex:
+        print("Exception in get_item", ex)
+        return {"error": "Invalid index", "time": datetime.datetime.now()}
+
     return res
 
 
@@ -60,6 +65,21 @@ async def reg_new_like_item(request: Request):
         return answer
     else:
         return {"error": "Invalid headers", "time": datetime.datetime.now()}
+
+
+@app.get("/like")
+async def get_list_of_favorites(request: Request):
+    headers = request.headers
+    login = headers.get("login")
+    password = headers.get("password")  # TODO реализовать проверку на формат данных
+
+    if login and password:
+        print(login, password)
+        answer = db.get_list_of_favorites(login, password)
+        return answer
+    else:
+        return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
+
 
 # Удаление элемента
 # @app.delete("/items/{item_id}")
