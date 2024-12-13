@@ -5,14 +5,14 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 
-from DB_worker import DB_worker
+from DbWorker import DbWorker
 
 app = FastAPI()
 
 app.mount("/item_image", StaticFiles(directory="item_image"), name="item_image")  # Выдача изображений на предметы
 app.mount("/user_image", StaticFiles(directory="user_image"), name="user_image")  # Выдача изображений на предметы
 
-db = DB_worker()
+db = DbWorker()
 
 
 # Получение списка всех элементов
@@ -22,9 +22,14 @@ async def get_items():
 
 
 # Получение элемента по ID
-@app.get("/items/{item_id}")
-async def get_item(item_id: str):
-    res = db.fetch_item_by_id(int(item_id))
+@app.get("/items/")
+async def get_item(item_id: int):
+    try:
+        res = db.fetch_item_by_id(int(item_id))
+    except ValueError as ex:
+        print("Exception in get_item", ex)
+        return {"error": "Invalid index", "time": datetime.datetime.now()}
+
     return res
 
 
@@ -45,13 +50,36 @@ async def registration_new_user(request: Request):
         return {"error": "Invalid headers", "time": datetime.datetime.now()}
 
 
-# Удаление элемента
-# @app.delete("/items/{item_id}")
-# def delete_item(item_id: str):
-#     if item_id in items:
-#         deleted_item = items.pop(item_id)
-#         return {"message": "Item deleted", "item": deleted_item}
-#     return {"error": "Item not found"}
+# Добавление в избранное
+@app.post("/like")
+async def reg_new_like_item(request: Request):
+    headers = request.headers
+    login = headers.get("login")
+    password = headers.get("password")
+    item_id = headers.get("item_id")
+    # TODO реализовать проверку на формат данных
+
+    if login and password and item_id:
+        print(login, password, int(item_id))
+        answer = db.add_favourites(login, password, int(item_id))
+        return answer
+    else:
+        return {"error": "Invalid headers", "time": datetime.datetime.now()}
+
+
+# Получить список всех избранных предметов
+@app.get("/like")
+async def get_list_of_favorites(request: Request):
+    headers = request.headers
+    login = headers.get("login")
+    password = headers.get("password")  # TODO реализовать проверку на формат данных
+
+    if login and password:
+        print(login, password)
+        answer = db.get_list_of_favorites(login, password)
+        return answer
+    else:
+        return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
 
 
 if __name__ == "__main__":
