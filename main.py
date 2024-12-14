@@ -67,6 +67,26 @@ async def reg_new_like_item(request: Request):
         return {"error": "Invalid headers", "time": datetime.datetime.now()}
 
 
+# Поставить или снять лайк с поста
+@app.post("/like_post")
+async def reg_new_like_post(request: Request):
+    headers = request.headers
+    login = headers.get("login")
+    password = headers.get("password")
+    post_id = headers.get("post_id")
+    # TODO реализовать проверку на формат данных
+
+    try:
+        if login and password and post_id:
+            print(login, password, int(post_id))
+            answer = db.add_post_like(login, password, int(post_id))
+            return answer
+    except Exception as ex:
+        print(ex)
+
+    return {"error": "Invalid headers", "time": datetime.datetime.now()}
+
+
 # Получить список всех избранных предметов
 @app.get("/like")
 async def get_list_of_favorites(request: Request):
@@ -80,6 +100,30 @@ async def get_list_of_favorites(request: Request):
         return answer
     else:
         return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
+
+
+# выдаёт список всех комментариев (лимит 10 за запрос)
+@app.get("/post/get_comments")
+async def get_comments_from_post(request: Request):
+    headers = request.headers
+    post_id = headers.get("post_id")  # TODO реализовать проверку на формат данных
+
+    try:
+        if post_id:
+            print(post_id)
+            answer = db.get_comments_from_post(int(post_id))
+            return answer
+    except Exception as ex:
+        print(ex)
+
+    return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
+
+
+# выдаёт список всех постов (лимит 10 за запрос)
+@app.get("/posts")
+async def get_list_of_posts():
+    answer = db.get_list_of_posts()
+    return answer
 
 
 if __name__ == "__main__":
