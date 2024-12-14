@@ -49,5 +49,7 @@
 #
 import DbWorker
 
-db = DB_worker.DbWorker()
-print(db.add_favourites("Alexey", "321", 5))
+db = DbWorker.DbWorker()
+# print(db.get_list_of_posts())
+# print(db.add_user_like("admin", "admin", "favorites", "item_id", 2))
+print(db.__add_user_like("admin", "admin", "post_likes", "post_id", 2))
