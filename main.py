@@ -10,7 +10,9 @@ from DbWorker import DbWorker
 app = FastAPI()
 
 app.mount("/item_image", StaticFiles(directory="item_image"), name="item_image")  # Выдача изображений на предметы
-app.mount("/user_image", StaticFiles(directory="user_image"), name="user_image")  # Выдача изображений на предметы
+app.mount("/user_image", StaticFiles(directory="user_image"),
+          name="user_image")  # Выдача изображений на аватарки пользвоателей
+app.mount("/post_image", StaticFiles(directory="post_image"), name="post_image")  # Выдача изображений на посты
 
 db = DbWorker()
 
