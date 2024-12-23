@@ -52,4 +52,5 @@ import DbWorker
 db = DbWorker.DbWorker()
 # print(db.get_list_of_posts())
 # print(db.add_user_like("admin", "admin", "favorites", "item_id", 2))
-print(db.__add_user_like("admin", "admin", "post_likes", "post_id", 2))
+# print(db.__add_user_like("admin", "admin", "post_likes", "post_id", 2))
+print(db.get_user_friend_info("admin", "admin", 4))
