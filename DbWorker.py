@@ -1,6 +1,8 @@
 import datetime
 import sqlite3
 
+from error import AuthenticationError
+
 
 class DbWorker:
     def __init__(self, db_name="database.db"):
@@ -41,7 +43,7 @@ class DbWorker:
         return dict(zip(columns, row))
 
     # Функция для регистрации пользователя
-    def register_user(self, login: str, password: str, phone_number: str):
+    def register_user(self, login: str, password: str, phone_number: str, name: str, surname: str):
         """
         Регистрирует пользователя
         :param login:
@@ -53,9 +55,9 @@ class DbWorker:
         try:
             # hashed_password = hash_password(password)  # TODO Хешируем пароль
             self.cursor.execute("""
-            INSERT INTO users (login, password, phone_number)
-            VALUES (?, ?, ?)
-            """, (login, password, phone_number))
+            INSERT INTO users (login, password, phone_number, name, surname)
+            VALUES (?, ?, ?,?,?)
+            """, (login, password, phone_number, name, surname))
 
             self.connection.commit()
             print("Пользователь успешно зарегистрирован!")
@@ -100,9 +102,13 @@ class DbWorker:
         :param liked_id: id предмета который лайкаем
         :return:
         """
-        user_id = self.__check_user(login, password)
-        if user_id is dict:
-            return user_id
+        try:
+            user_id = self.__check_user(login, password)
+        except AuthenticationError as ex:
+            return ex.as_dict()
+
+        # if user_id is dict:
+        #     return user_id
 
         self.cursor.execute(f"""
                     SELECT * FROM {table_name}
@@ -137,10 +143,12 @@ class DbWorker:
         :param password:
         :return:
         """
-
-        user_id = self.__check_user(login, password)
-        if user_id is dict:
-            return user_id
+        try:
+            user_id = self.__check_user(login, password)
+        except AuthenticationError as ex:
+            return ex.as_dict()
+        # if user_id is dict:
+        #     return user_id
 
         print(user_id, type(user_id))
         self.cursor.execute("""
@@ -195,7 +203,8 @@ class DbWorker:
                             """, (login, password))
         user_row = self.cursor.fetchone()
         if not user_row:
-            return {"error": "The user is not logged in", "time": datetime.datetime.now()}
+            raise AuthenticationError("The user is not logged in")
+            # return {"error": "The user is not logged in", "time": datetime.datetime.now()}
         return user_row[0]
 
     def get_comments_from_post(self, post_id: int, limit: int = 10):
@@ -219,6 +228,74 @@ class DbWorker:
             """, (post_id, limit))
 
         rows = self.cursor.fetchall()
+        columns = [column[0] for column in self.cursor.description]
+
+        return [dict(zip(columns, row)) for row in rows]
+
+    def get_user_friend_list(self, login: str, password: str):
+
+        try:
+            user_id = self.__check_user(login, password)
+        except AuthenticationError as ex:
+            return ex.as_dict()
+
+        self.cursor.execute(
+            """
+            SELECT
+                u.id as 'user_id',
+                u.name,
+                u.surname,
+                u.status,
+                u.phone_number,
+                u.image
+            FROM
+                friends f
+            JOIN
+                users u
+            ON
+                u.id = CASE
+                           WHEN f.user_id = ? THEN f.friend_id
+                           ELSE f.user_id
+                       END
+            WHERE
+                f.user_id = ? OR f.friend_id = ?""",
+            (user_id, user_id, user_id)
+        )
+
+        rows = self.cursor.fetchall()
+        columns = [column[0] for column in self.cursor.description]
+
+        return [dict(zip(columns, row)) for row in rows]
+
+    def get_user_friend_info(self, login: str, password: str, friend_id: int):
+        try:
+            user_id = self.__check_user(login, password)
+        except AuthenticationError as ex:
+            return ex.as_dict()
+
+        self.cursor.execute(
+            """
+            SELECT 
+                u.id AS friend_id,
+                u.name,
+                u.surname,
+                u.status,
+                u.phone_number,
+                u.image
+            FROM 
+                friends f
+            JOIN 
+                users u
+            ON 
+                u.id = f.friend_id
+            WHERE 
+                f.user_id = ? AND f.friend_id = ?;""",
+            (user_id, friend_id)
+        )
+
+        rows = self.cursor.fetchall()
+        if not rows:
+            return {"error": "The user is not your friend.", "time": datetime.datetime.now()}
         columns = [column[0] for column in self.cursor.description]
 
         return [dict(zip(columns, row)) for row in rows]

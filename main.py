@@ -9,10 +9,19 @@ from DbWorker import DbWorker
 
 app = FastAPI()
 
-app.mount("/item_image", StaticFiles(directory="item_image"), name="item_image")  # Выдача изображений на предметы
+# Выдача изображений на предметы
+app.mount("/item_image", StaticFiles(directory="item_image"), name="item_image")
+
+# Выдача изображений на аватарки пользователей
 app.mount("/user_image", StaticFiles(directory="user_image"),
-          name="user_image")  # Выдача изображений на аватарки пользвоателей
-app.mount("/post_image", StaticFiles(directory="post_image"), name="post_image")  # Выдача изображений на посты
+          name="user_image")
+
+# Выдача изображений на посты
+app.mount("/post_image", StaticFiles(directory="post_image"), name="post_image")
+
+# Выдача изображений компаний
+app.mount("/business_image", StaticFiles(directory="business_image"),
+          name="business_image")
 
 db = DbWorker()
 
@@ -42,11 +51,14 @@ async def registration_new_user(request: Request):
     login = headers.get("login")
     password = headers.get("password")
     phone_number = headers.get("phone_number")
+    name = headers.get("name")
+    surname = headers.get("surname")
+
     # TODO реализовать проверку на формат данных
 
-    if login and password and phone_number:
+    if login and password and phone_number and name and surname:
         print(login, password, phone_number)
-        answer = db.register_user(login, password, phone_number)
+        answer = db.register_user(login, password, phone_number, name, surname)
         return answer
     else:
         return {"error": "Invalid headers", "time": datetime.datetime.now()}
@@ -127,6 +139,34 @@ async def get_list_of_posts():
     answer = db.get_list_of_posts()
     return answer
 
+
+@app.get("/user/friends")
+async def get_list_of_friends(request: Request):
+    headers = request.headers
+    login = headers.get("login")  # TODO реализовать проверку на формат данных
+    password = headers.get("password")  # TODO реализовать проверку на формат данных
+
+    if login and password:
+        answer = db.get_user_friend_list(login, password)
+        return answer
+
+    return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
+
+
+@app.get("/user/friend_info")
+async def get_friend_info(request: Request):
+    headers = request.headers
+    login = headers.get("login")  # TODO реализовать проверку на формат данных
+    password = headers.get("password")  # TODO реализовать проверку на формат данных
+    friend_id = headers.get("friend_id")
+
+    try:
+        if login and password and friend_id:
+            answer = db.get_user_friend_info(login, password, int(friend_id))
+            return answer
+    except ValueError as ex:
+        return {"error": "Friend_id is int value.", "time": datetime.datetime.now()}  # TODO вынести в метод
+    return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
 
 if __name__ == "__main__":
     import argparse
