@@ -300,6 +300,80 @@ class DbWorker:
 
         return [dict(zip(columns, row)) for row in rows]
 
+    def get_favorites_by_friend(self, login: str, password: str, friend_id: int):
+        try:
+            user_id = self.__check_user(login, password)
+        except AuthenticationError as ex:
+            return ex.as_dict()
+
+        self.cursor.execute(
+            """
+            WITH verified_friend AS (
+                SELECT 
+                    CASE 
+                        WHEN f.user_id = ? THEN f.friend_id
+                        ELSE f.user_id
+                    END AS friend_id
+                FROM 
+                    friends f
+                WHERE 
+                    (f.user_id = ? AND f.friend_id = ?) OR (f.user_id = ? AND f.friend_id = ?)
+            ),
+            friend_favorites AS (
+                SELECT 
+                    fav.item_id
+                FROM 
+                    favorites fav
+                JOIN 
+                    verified_friend vf
+                ON 
+                    fav.user_id = vf.friend_id
+            ),
+            item_details AS (
+                SELECT 
+                    i.id,
+                    i.name,
+                    i.description,
+                    i.average_rating,
+                    i.brand,
+                    i.image
+                FROM 
+                    items i
+                JOIN 
+                    friend_favorites ff
+                ON 
+                    i.id = ff.item_id
+            )
+            SELECT * FROM item_details;
+            """,
+            (user_id, user_id, friend_id, friend_id, user_id)
+        )
+
+        rows = self.cursor.fetchall()
+        columns = [column[0] for column in self.cursor.description]
+
+        return [dict(zip(columns, row)) for row in rows]
+
+    def get_reviews_by_item(self, item_id: int):
+        self.cursor.execute("""
+        SELECT
+            r.*,
+            u.image AS user_image,
+            u.name AS user_name
+        FROM
+            reviews r
+        JOIN
+            users u
+        ON
+            r.user_id = u.id
+        WHERE
+            r.item_id = ?;
+""", (item_id,))
+        rows = self.cursor.fetchall()
+        columns = [column[0] for column in self.cursor.description]
+
+        return [dict(zip(columns, row)) for row in rows]
+
     def close(self):
         """
         Закрывает соединение с базой данных.
