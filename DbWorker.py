@@ -354,6 +354,26 @@ class DbWorker:
 
         return [dict(zip(columns, row)) for row in rows]
 
+    def get_reviews_by_item(self, item_id: int):
+        self.cursor.execute("""
+        SELECT
+            r.*,
+            u.image AS user_image,
+            u.name AS user_name
+        FROM
+            reviews r
+        JOIN
+            users u
+        ON
+            r.user_id = u.id
+        WHERE
+            r.item_id = ?;
+""", (item_id,))
+        rows = self.cursor.fetchall()
+        columns = [column[0] for column in self.cursor.description]
+
+        return [dict(zip(columns, row)) for row in rows]
+
     def close(self):
         """
         Закрывает соединение с базой данных.

@@ -44,6 +44,19 @@ async def get_item(item_id: int):
     return res
 
 
+@app.get("/item/reviews")
+async def get_item_reviews(request: Request):
+    headers = request.headers
+    item_id = headers.get("item_id")
+    try:
+        if item_id:
+            answer = db.get_reviews_by_item(int(item_id))
+            return answer
+    except ValueError as ex:
+        return {"error": "Item_id must be integer.", "time": datetime.datetime.now()}
+    return {"error": "Invalid headers", "time": datetime.datetime.now()}
+
+
 # Добавление нового элемента
 @app.post("/registration")
 async def registration_new_user(request: Request):
@@ -183,7 +196,6 @@ async def get_list_of_favorites_by_friend(request: Request):
     except ValueError as ex:
         return {"error": "Friend_id is int value.", "time": datetime.datetime.now()}  # TODO вынести в метод
     return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
-
 
 
 if __name__ == "__main__":
