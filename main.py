@@ -168,6 +168,24 @@ async def get_friend_info(request: Request):
         return {"error": "Friend_id is int value.", "time": datetime.datetime.now()}  # TODO вынести в метод
     return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
 
+
+@app.get("/user/friend_info/favorites")
+async def get_list_of_favorites_by_friend(request: Request):
+    headers = request.headers
+    login = headers.get("login")  # TODO реализовать проверку на формат данных
+    password = headers.get("password")  # TODO реализовать проверку на формат данных
+    friend_id = headers.get("friend_id")
+
+    try:
+        if login and password and friend_id:
+            answer = db.get_favorites_by_friend(login, password, int(friend_id))
+            return answer
+    except ValueError as ex:
+        return {"error": "Friend_id is int value.", "time": datetime.datetime.now()}  # TODO вынести в метод
+    return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
+
+
+
 if __name__ == "__main__":
     import argparse
 
