@@ -374,6 +374,29 @@ class DbWorker:
 
         return [dict(zip(columns, row)) for row in rows]
 
+    def get_items_by_filter(self, filters: dict):
+        query = "SELECT * FROM items WHERE 1=1"
+        params = []
+
+        # Генерация WHERE условий на основе фильтров
+        for key, value in filters.items():
+            if value:
+                if isinstance(value, tuple):
+                    # Если это диапазон, то используем BETWEEN
+                    query += f" AND {key} BETWEEN ? AND ?"
+                    params.extend(value)
+                else:
+                    query += f" AND {key} = ?"
+                    params.append(value)
+
+        # Выполняем запрос
+        self.cursor.execute(query, params)
+        rows = self.cursor.fetchall()
+        columns = [column[0] for column in self.cursor.description]
+
+        return [dict(zip(columns, row)) for row in rows]
+
+
     def close(self):
         """
         Закрывает соединение с базой данных.
