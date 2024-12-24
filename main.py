@@ -1,8 +1,9 @@
 import datetime
 import os
+from typing import Optional
 
 import uvicorn
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Query
 from fastapi.staticfiles import StaticFiles
 
 from DbWorker import DbWorker
@@ -196,6 +197,38 @@ async def get_list_of_favorites_by_friend(request: Request):
     except ValueError as ex:
         return {"error": "Friend_id is int value.", "time": datetime.datetime.now()}  # TODO вынести в метод
     return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
+
+
+@app.get("/filter_items")
+async def filter_items(
+        country: Optional[str] = Query(None),
+        style: Optional[str] = Query(None),
+        types: Optional[str] = Query(None),
+        alcohol_range: Optional[str] = Query(None),  # Ожидаем диапазон в виде строки "2-4"
+        density_range: Optional[str] = Query(None),  # То же для плотности
+):
+    # Разбираем диапазоны
+    def parse_range(range_str):
+        if range_str:
+            try:
+                lower, upper = map(float, range_str.split("-"))
+                return lower, upper
+            except ValueError:
+                return None
+        return None
+
+    # Собираем фильтры в словарь
+    filters = {
+        "country": country,
+        "style": style,
+        "color": types,
+        "alcohol_percentage": parse_range(alcohol_range),
+        "density": parse_range(density_range)
+    }
+
+    # Получаем данные
+    items = db.get_items_by_filter(filters)
+    return items
 
 
 if __name__ == "__main__":
