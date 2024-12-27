@@ -1,2 +1,6 @@
-
 api_checker.py
+/logs/db_errors.log
+/logs/api_main_info.log
+/logs/api_main_errors.log
+/logs/db_info.log
+/logs/unicorn.log

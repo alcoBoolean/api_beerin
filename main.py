@@ -7,6 +7,7 @@ from fastapi import FastAPI, Query, Header
 from fastapi.staticfiles import StaticFiles
 
 from DbWorker import DbWorker
+from logging_config import setup_logger
 
 app = FastAPI()
 
@@ -24,6 +25,7 @@ app.mount("/post_image", StaticFiles(directory="post_image"), name="post_image")
 app.mount("/business_image", StaticFiles(directory="business_image"),
           name="business_image")
 
+logger = setup_logger('api_main')
 db = DbWorker()
 
 
@@ -232,10 +234,16 @@ if __name__ == "__main__":
     startup_ip = "0.0.0.0"
     if args.test:
         startup_ip = "127.0.0.1"
-    elif os.name == 'nt':
-        print("=================================")  # TODO переделать на логгирование
-        print("Code was stared by Win System. You're crazy, or forget --test flag.")
-        print("=================================")
-        exit(2)
 
-    uvicorn.run("main:app", host=startup_ip, port=8000, reload=True)
+        logger.info("========================")
+        logger.info("Start API in local env")
+    elif os.name == 'nt':
+        logger.critical("=================================")
+        logger.critical("Code was stared by Win System. You're crazy, or forget --test flag.")
+        logger.critical("=================================")
+        exit(2)
+    else:
+        logger.info("========================")
+        logger.info("Start API in VPS")
+
+    uvicorn.run("main:app", host=startup_ip, port=8000, reload=True, log_config=f"logs/unicorn_config_log.ini")

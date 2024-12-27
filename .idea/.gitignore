@@ -6,3 +6,11 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+/inspectionProfiles/profiles_settings.xml
+/modules.xml
+/inspectionProfiles/Project_Default.xml
+/misc.xml
+/dataSources.xml
+/sqldialects.xml
+/vcs.xml
+/api_beerin.iml

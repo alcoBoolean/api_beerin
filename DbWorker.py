@@ -4,7 +4,9 @@ import sqlite3
 from fastapi.responses import JSONResponse
 
 from error import AuthenticationError
+from logging_config import setup_logger
 
+logger = setup_logger("db")
 
 class DbWorker:
     def __init__(self, db_name="database.db"):
@@ -14,6 +16,9 @@ class DbWorker:
         self.db_name = db_name
         self.connection = sqlite3.connect(self.db_name, check_same_thread=False)
         self.cursor = self.connection.cursor()
+        logger.info("========================")
+        logger.info("Start Work In BD")
+
 
     def fetch_items(self, limit=10):
         """
