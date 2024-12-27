@@ -1,5 +1,7 @@
 import datetime
 
+from fastapi.responses import JSONResponse
+
 
 class AuthenticationError(Exception):
     """Класс исключения для ошибок аутентификации."""
@@ -8,9 +10,11 @@ class AuthenticationError(Exception):
         super().__init__(message)
         self.details = {
             "error": message,
-            "time": datetime.datetime.now()
+            "time": datetime.datetime.now().isoformat()
         }
 
     def as_dict(self):
         """Метод для получения словаря с деталями ошибки."""
-        return self.details
+        return JSONResponse(
+            status_code=401,
+            content=self.details)

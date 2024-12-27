@@ -3,7 +3,7 @@ import os
 from typing import Optional
 
 import uvicorn
-from fastapi import FastAPI, Request, Query
+from fastapi import FastAPI, Query, Header
 from fastapi.staticfiles import StaticFiles
 
 from DbWorker import DbWorker
@@ -36,115 +36,102 @@ async def get_items():
 # Получение элемента по ID
 @app.get("/items/")
 async def get_item(item_id: int):
-    try:
-        res = db.fetch_item_by_id(int(item_id))
-    except ValueError as ex:
-        print("Exception in get_item", ex)
-        return {"error": "Invalid index", "time": datetime.datetime.now()}
-
+    res = db.fetch_item_by_id(int(item_id))
     return res
 
 
 @app.get("/item/reviews")
-async def get_item_reviews(request: Request):
-    headers = request.headers
-    item_id = headers.get("item_id")
-    try:
-        if item_id:
-            answer = db.get_reviews_by_item(int(item_id))
-            return answer
-    except ValueError as ex:
-        return {"error": "Item_id must be integer.", "time": datetime.datetime.now()}
-    return {"error": "Invalid headers", "time": datetime.datetime.now()}
+async def get_item_reviews(item_id: int = Header(..., alias="item_id")):
+    answer = db.get_reviews_by_item(item_id)
+    return answer
 
 
 # Добавление нового элемента
 @app.post("/registration")
-async def registration_new_user(request: Request):
-    headers = request.headers
-    login = headers.get("login")
-    password = headers.get("password")
-    phone_number = headers.get("phone_number")
-    name = headers.get("name")
-    surname = headers.get("surname")
-
+async def registration_new_user(login: str = Header(...), password: str = Header(...),
+                                phone_number: str = Header(..., alias="phone_number"),
+                                name: str = Header(...), surname: str = Header(...)):
     # TODO реализовать проверку на формат данных
 
-    if login and password and phone_number and name and surname:
-        print(login, password, phone_number)
-        answer = db.register_user(login, password, phone_number, name, surname)
-        return answer
-    else:
-        return {"error": "Invalid headers", "time": datetime.datetime.now()}
+    print(login, password, phone_number)
+    answer = db.register_user(login, password, phone_number, name, surname)
+    return answer
 
 
 # Добавление в избранное
 @app.post("/like")
-async def reg_new_like_item(request: Request):
-    headers = request.headers
-    login = headers.get("login")
-    password = headers.get("password")
-    item_id = headers.get("item_id")
+async def reg_new_like_item(login: str = Header(...), password: str = Header(...),
+                            item_id: int = Header(..., alias="item_id")):
+    # login = headers.get("login")
+    # password = headers.get("password")
+    # item_id = headers.get("item_id")
     # TODO реализовать проверку на формат данных
 
-    if login and password and item_id:
-        print(login, password, int(item_id))
-        answer = db.add_favourites(login, password, int(item_id))
-        return answer
-    else:
-        return {"error": "Invalid headers", "time": datetime.datetime.now()}
+    print(login, password, int(item_id))
+    answer = db.add_favourites(login, password, int(item_id))
+    return answer
 
 
 # Поставить или снять лайк с поста
 @app.post("/like_post")
-async def reg_new_like_post(request: Request):
-    headers = request.headers
-    login = headers.get("login")
-    password = headers.get("password")
-    post_id = headers.get("post_id")
+async def reg_new_like_post(login: str = Header(...), password: str = Header(...),
+                            post_id: int = Header(..., alias="post_id")):
+    # headers = request.headers
+    # login = headers.get("login")
+    # password = headers.get("password")
+    # post_id = headers.get("post_id")
     # TODO реализовать проверку на формат данных
 
     try:
-        if login and password and post_id:
-            print(login, password, int(post_id))
-            answer = db.add_post_like(login, password, int(post_id))
-            return answer
+        # if login and password and post_id:
+        print(login, password, int(post_id))
+        answer = db.add_post_like(login, password, int(post_id))
+        return answer
     except Exception as ex:
         print(ex)
 
     return {"error": "Invalid headers", "time": datetime.datetime.now()}
 
 
+@app.delete("/user")
+async def delete_user(login: str = Header(...), password: str = Header(...)):
+    return db.delete_user(login, password)
+
+
 # Получить список всех избранных предметов
 @app.get("/like")
-async def get_list_of_favorites(request: Request):
-    headers = request.headers
-    login = headers.get("login")
-    password = headers.get("password")  # TODO реализовать проверку на формат данных
+async def get_list_of_favorites(login: str = Header(...), password: str = Header(...)):
+    # headers = request.headers
+    # login = headers.get("login")
+    # password = headers.get("password")
 
-    if login and password:
-        print(login, password)
-        answer = db.get_list_of_favorites(login, password)
-        return answer
-    else:
-        return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
+    # TODO реализовать проверку на формат данных
+
+    # if login and password:
+    print(login, password)
+    answer = db.get_list_of_favorites(login, password)
+    return answer
+
+
+# else:
+#     return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
 
 
 # выдаёт список всех комментариев (лимит 10 за запрос)
 @app.get("/post/get_comments")
-async def get_comments_from_post(request: Request):
-    headers = request.headers
-    post_id = headers.get("post_id")  # TODO реализовать проверку на формат данных
+async def get_comments_from_post(post_id: int = Header(..., alias="post_id")):
+    # headers = request.headers
+    # post_id = headers.get("post_id")  # TODO реализовать проверку на формат данных
 
     try:
-        if post_id:
-            print(post_id)
-            answer = db.get_comments_from_post(int(post_id))
-            return answer
+        # if post_id:
+        print(post_id)
+        answer = db.get_comments_from_post(int(post_id))
+        return answer
     except Exception as ex:
         print(ex)
 
-    return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
+    # return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
 
 
 # выдаёт список всех постов (лимит 10 за запрос)
@@ -155,48 +142,51 @@ async def get_list_of_posts():
 
 
 @app.get("/user/friends")
-async def get_list_of_friends(request: Request):
-    headers = request.headers
-    login = headers.get("login")  # TODO реализовать проверку на формат данных
-    password = headers.get("password")  # TODO реализовать проверку на формат данных
+async def get_list_of_friends(login: str = Header(...), password: str = Header(...)):
+    # headers = request.headers
+    # login = headers.get("login")  # TODO реализовать проверку на формат данных
+    # password = headers.get("password")  # TODO реализовать проверку на формат данных
 
-    if login and password:
-        answer = db.get_user_friend_list(login, password)
-        return answer
+    # if login and password:
+    answer = db.get_user_friend_list(login, password)
+    return answer
 
-    return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
+
+# return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
 
 
 @app.get("/user/friend_info")
-async def get_friend_info(request: Request):
-    headers = request.headers
-    login = headers.get("login")  # TODO реализовать проверку на формат данных
-    password = headers.get("password")  # TODO реализовать проверку на формат данных
-    friend_id = headers.get("friend_id")
+async def get_friend_info(login: str = Header(...), password: str = Header(...),
+                          friend_id: int = Header(..., alias="friend_id")):
+    # headers = request.headers
+    # login = headers.get("login")  # TODO реализовать проверку на формат данных
+    # password = headers.get("password")  # TODO реализовать проверку на формат данных
+    # friend_id = headers.get("friend_id")
 
     try:
-        if login and password and friend_id:
-            answer = db.get_user_friend_info(login, password, int(friend_id))
-            return answer
+        # if login and password and friend_id:
+        answer = db.get_user_friend_info(login, password, friend_id)
+        return answer
     except ValueError as ex:
         return {"error": "Friend_id is int value.", "time": datetime.datetime.now()}  # TODO вынести в метод
-    return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
+    # return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
 
 
 @app.get("/user/friend_info/favorites")
-async def get_list_of_favorites_by_friend(request: Request):
-    headers = request.headers
-    login = headers.get("login")  # TODO реализовать проверку на формат данных
-    password = headers.get("password")  # TODO реализовать проверку на формат данных
-    friend_id = headers.get("friend_id")
+async def get_list_of_favorites_by_friend(login: str = Header(...), password: str = Header(...),
+                                          friend_id: int = Header(..., alias="friend_id")):
+    # headers = request.headers
+    # login = headers.get("login")  # TODO реализовать проверку на формат данных
+    # password = headers.get("password")  # TODO реализовать проверку на формат данных
+    # friend_id = headers.get("friend_id")
 
     try:
-        if login and password and friend_id:
-            answer = db.get_favorites_by_friend(login, password, int(friend_id))
-            return answer
+        # if login and password and friend_id:
+        answer = db.get_favorites_by_friend(login, password, int(friend_id))
+        return answer
     except ValueError as ex:
         return {"error": "Friend_id is int value.", "time": datetime.datetime.now()}  # TODO вынести в метод
-    return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
+    # return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
 
 
 @app.get("/filter_items")

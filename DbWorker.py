@@ -1,6 +1,8 @@
 import datetime
 import sqlite3
 
+from fastapi.responses import JSONResponse
+
 from error import AuthenticationError
 
 
@@ -34,7 +36,9 @@ class DbWorker:
 
         # Если предмет не найден
         if not row:
-            return {"error": "Item not found"}
+            return JSONResponse(
+                status_code=404,
+                content={"error": "Item not found"})
 
         # Получаем названия столбцов
         columns = [column[0] for column in self.cursor.description]
@@ -66,10 +70,34 @@ class DbWorker:
 
             print("Ошибка: Пользователь с таким именем или email уже существует.")
             print(e)
-            return {"error_code": 1, "error": "The user has already been created.", "time": datetime.datetime.now()}
+            return JSONResponse(
+                status_code=400,
+                content={"error": "The user has already been created.",
+                         "time": datetime.datetime.now()})
+            # return {"error_code": 1, "error": "The user has already been created.", "time": datetime.datetime.now()}
         except Exception as e:
             print(f"Произошла ошибка: {e}")
-            return {"error_code": 0, "error": "Undetected error", "time": datetime.datetime.now()}
+
+            return JSONResponse(
+                status_code=503,
+                content={"error": "Undetected error",
+                         "time": datetime.datetime.now()})
+            # return {"error_code": 0, "error": "Undetected error", "time": datetime.datetime.now()}
+
+    def delete_user(self, login: str, password: str):
+        try:
+            user_id = self.__check_user(login, password)
+        except AuthenticationError as ex:
+            return ex.as_dict()
+
+        self.cursor.execute("""
+            DELETE FROM users
+            WHERE id = ?;
+        """, (user_id,))
+        self.connection.commit()
+
+        print(f"Пользователь ({login}, {password}) успешно удалён!")
+        return {"success": True, "time": datetime.datetime.now()}
 
     def add_favourites(self, login: str, password: str, item_id: int):
         """
@@ -395,7 +423,6 @@ class DbWorker:
         columns = [column[0] for column in self.cursor.description]
 
         return [dict(zip(columns, row)) for row in rows]
-
 
     def close(self):
         """
