@@ -29,30 +29,50 @@ logger = setup_logger('api_main')
 db = DbWorker()
 
 
-# Получение списка всех элементов
 @app.get("/items")
 async def get_items():
+    """
+    Получить список предметов. Лимит в 10 за запрос.
+    :return:
+    """
     return db.fetch_items()
 
 
-# Получение элемента по ID
 @app.get("/items/")
 async def get_item(item_id: int):
+    """
+    Получение предметов по его ID
+    :param item_id:
+    :return:
+    """
     res = db.fetch_item_by_id(int(item_id))
     return res
 
 
 @app.get("/item/reviews")
 async def get_item_reviews(item_id: int = Header(..., alias="item_id")):
+    """
+    Получить отзывы на конкретный предмет по ID
+    :param item_id:
+    :return:
+    """
     answer = db.get_reviews_by_item(item_id)
     return answer
 
 
-# Добавление нового элемента
 @app.post("/registration")
 async def registration_new_user(login: str = Header(...), password: str = Header(...),
                                 phone_number: str = Header(..., alias="phone_number"),
                                 name: str = Header(...), surname: str = Header(...)):
+    """
+    Регистрация нового пользователя
+    :param login:
+    :param password:
+    :param phone_number:
+    :param name:
+    :param surname:
+    :return:
+    """
     # TODO реализовать проверку на формат данных
 
     print(login, password, phone_number)
@@ -60,13 +80,16 @@ async def registration_new_user(login: str = Header(...), password: str = Header
     return answer
 
 
-# Добавление в избранное
 @app.post("/like")
 async def reg_new_like_item(login: str = Header(...), password: str = Header(...),
                             item_id: int = Header(..., alias="item_id")):
-    # login = headers.get("login")
-    # password = headers.get("password")
-    # item_id = headers.get("item_id")
+    """
+    Поставить или снять лайк `предмету`. Требуется авторизация
+    :param login:
+    :param password:
+    :param item_id:
+    :return:
+    """
     # TODO реализовать проверку на формат данных
 
     print(login, password, int(item_id))
@@ -74,18 +97,19 @@ async def reg_new_like_item(login: str = Header(...), password: str = Header(...
     return answer
 
 
-# Поставить или снять лайк с поста
 @app.post("/like_post")
 async def reg_new_like_post(login: str = Header(...), password: str = Header(...),
                             post_id: int = Header(..., alias="post_id")):
-    # headers = request.headers
-    # login = headers.get("login")
-    # password = headers.get("password")
-    # post_id = headers.get("post_id")
+    """
+    Поставить или снять лайк `посту`. Требуется авторизация
+    :param login:
+    :param password:
+    :param post_id:
+    :return:
+    """
     # TODO реализовать проверку на формат данных
 
     try:
-        # if login and password and post_id:
         print(login, password, int(post_id))
         answer = db.add_post_like(login, password, int(post_id))
         return answer
@@ -97,98 +121,109 @@ async def reg_new_like_post(login: str = Header(...), password: str = Header(...
 
 @app.delete("/user")
 async def delete_user(login: str = Header(...), password: str = Header(...)):
+    """
+    Удаление юзера. Требуется авторизация.
+    :param login:
+    :param password:
+    :return:
+    """
+    # todo сделать это админ фичёй
+
     return db.delete_user(login, password)
 
 
-# Получить список всех избранных предметов
 @app.get("/like")
 async def get_list_of_favorites(login: str = Header(...), password: str = Header(...)):
-    # headers = request.headers
-    # login = headers.get("login")
-    # password = headers.get("password")
-
+    """
+    Получить список избранных `предметов` от юзера. Требуется авторизация.
+    :param login:
+    :param password:
+    :return:
+    """
     # TODO реализовать проверку на формат данных
 
-    # if login and password:
     print(login, password)
     answer = db.get_list_of_favorites(login, password)
     return answer
 
 
-# else:
-#     return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
-
-
-# выдаёт список всех комментариев (лимит 10 за запрос)
 @app.get("/post/get_comments")
 async def get_comments_from_post(post_id: int = Header(..., alias="post_id")):
-    # headers = request.headers
-    # post_id = headers.get("post_id")  # TODO реализовать проверку на формат данных
+    """
+    Получить список комментариев от поста. Лимит 10 за запрос
+    :param post_id:
+    :return:
+    """
+    # TODO реализовать проверку на формат данных
+    # TODO сделать докрутку информации (после 0-10, выдавать 11-20, 21-30 и тд.
 
     try:
-        # if post_id:
         print(post_id)
         answer = db.get_comments_from_post(int(post_id))
         return answer
     except Exception as ex:
         print(ex)
 
-    # return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
 
-
-# выдаёт список всех постов (лимит 10 за запрос)
 @app.get("/posts")
 async def get_list_of_posts():
+    """
+    Получить список всех постов. Лимит 10 за запрос
+    :return:
+    """
+    # TODO сделать докрутку информации (после 0-10, выдавать 11-20, 21-30 и тд.
     answer = db.get_list_of_posts()
     return answer
 
 
 @app.get("/user/friends")
 async def get_list_of_friends(login: str = Header(...), password: str = Header(...)):
-    # headers = request.headers
-    # login = headers.get("login")  # TODO реализовать проверку на формат данных
-    # password = headers.get("password")  # TODO реализовать проверку на формат данных
+    """
+    Получить список всех друзей пользователя. Требуется авторизация.
+    :param login:
+    :param password:
+    :return:
+    """
+    # TODO реализовать проверку на формат данных
 
-    # if login and password:
     answer = db.get_user_friend_list(login, password)
     return answer
-
-
-# return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
 
 
 @app.get("/user/friend_info")
 async def get_friend_info(login: str = Header(...), password: str = Header(...),
                           friend_id: int = Header(..., alias="friend_id")):
-    # headers = request.headers
-    # login = headers.get("login")  # TODO реализовать проверку на формат данных
-    # password = headers.get("password")  # TODO реализовать проверку на формат данных
-    # friend_id = headers.get("friend_id")
-
+    """
+    Получить информацию о конкретном друге. Требуется авторизация, требуется наличие "друга" в друзьях пользователя
+    :param login:
+    :param password:
+    :param friend_id:
+    :return:
+    """
+    # TODO реализовать проверку на формат данных
     try:
-        # if login and password and friend_id:
         answer = db.get_user_friend_info(login, password, friend_id)
         return answer
     except ValueError as ex:
         return {"error": "Friend_id is int value.", "time": datetime.datetime.now()}  # TODO вынести в метод
-    # return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
 
 
 @app.get("/user/friend_info/favorites")
 async def get_list_of_favorites_by_friend(login: str = Header(...), password: str = Header(...),
                                           friend_id: int = Header(..., alias="friend_id")):
-    # headers = request.headers
-    # login = headers.get("login")  # TODO реализовать проверку на формат данных
-    # password = headers.get("password")  # TODO реализовать проверку на формат данных
-    # friend_id = headers.get("friend_id")
+    """
+    Получить список избранного от своего друга. Требуется авторизация и наличие "друга" в списке друзей пользователя.
+    :param login:
+    :param password:
+    :param friend_id:
+    :return:
+    """
 
     try:
-        # if login and password and friend_id:
         answer = db.get_favorites_by_friend(login, password, int(friend_id))
         return answer
     except ValueError as ex:
         return {"error": "Friend_id is int value.", "time": datetime.datetime.now()}  # TODO вынести в метод
-    # return {"error": "Invalid headers", "time": datetime.datetime.now()}  # TODO вынести в метод
 
 
 @app.get("/filter_items")
@@ -199,8 +234,23 @@ async def filter_items(
         alcohol_range: Optional[str] = Query(None),  # Ожидаем диапазон в виде строки "2-4"
         density_range: Optional[str] = Query(None),  # То же для плотности
 ):
-    # Разбираем диапазоны
+    """
+    Получение списка "отфильрованных" предметов. Лимит на 10 за запрос.
+    :param country:
+    :param style:
+    :param types:
+    :param alcohol_range:
+    :param density_range:
+    :return:
+    """
+
+    # TODO сделать докрутку информации (после 0-10, выдавать 11-20, 21-30 и тд.
     def parse_range(range_str):
+        """
+        Парсим промежуток. Получаем мин-макс.
+        :param range_str: Обязательно int"-"int
+        :return:
+        """
         if range_str:
             try:
                 lower, upper = map(float, range_str.split("-"))

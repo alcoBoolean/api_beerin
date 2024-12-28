@@ -8,6 +8,7 @@ from logging_config import setup_logger
 
 logger = setup_logger("db")
 
+
 class DbWorker:
     def __init__(self, db_name="database.db"):
         """
@@ -18,7 +19,6 @@ class DbWorker:
         self.cursor = self.connection.cursor()
         logger.info("========================")
         logger.info("Start Work In BD")
-
 
     def fetch_items(self, limit=10):
         """
@@ -79,7 +79,6 @@ class DbWorker:
                 status_code=400,
                 content={"error": "The user has already been created.",
                          "time": datetime.datetime.now()})
-            # return {"error_code": 1, "error": "The user has already been created.", "time": datetime.datetime.now()}
         except Exception as e:
             print(f"Произошла ошибка: {e}")
 
@@ -87,9 +86,14 @@ class DbWorker:
                 status_code=503,
                 content={"error": "Undetected error",
                          "time": datetime.datetime.now()})
-            # return {"error_code": 0, "error": "Undetected error", "time": datetime.datetime.now()}
 
     def delete_user(self, login: str, password: str):
+        """
+        Удаляет текущего авторизированного пользователя.
+        :param login:
+        :param password:
+        :return:
+        """
         try:
             user_id = self.__check_user(login, password)
         except AuthenticationError as ex:
@@ -106,7 +110,7 @@ class DbWorker:
 
     def add_favourites(self, login: str, password: str, item_id: int):
         """
-        Добавляет или удаляет предмет из избранного
+        Добавляет или удаляет `предмет` из избранного
         :param login:
         :param password:
         :param item_id:
@@ -126,7 +130,7 @@ class DbWorker:
 
     def __add_user_like(self, login: str, password: str, table_name: str, liked_category: str, liked_id: int):
         """
-        Абстрактный класс для лайка чего-то. Подходит для лайка предмета и записи со стены
+        Абстрактная функция для лайка и анлайка чего-то. Подходит для предмета и записи со стены
 
         :param login:
         :param password:
@@ -139,9 +143,6 @@ class DbWorker:
             user_id = self.__check_user(login, password)
         except AuthenticationError as ex:
             return ex.as_dict()
-
-        # if user_id is dict:
-        #     return user_id
 
         self.cursor.execute(f"""
                     SELECT * FROM {table_name}
@@ -180,8 +181,6 @@ class DbWorker:
             user_id = self.__check_user(login, password)
         except AuthenticationError as ex:
             return ex.as_dict()
-        # if user_id is dict:
-        #     return user_id
 
         print(user_id, type(user_id))
         self.cursor.execute("""
@@ -266,7 +265,12 @@ class DbWorker:
         return [dict(zip(columns, row)) for row in rows]
 
     def get_user_friend_list(self, login: str, password: str):
-
+        """
+        Получить список друзей. Требуется авторизация
+        :param login:
+        :param password:
+        :return:
+        """
         try:
             user_id = self.__check_user(login, password)
         except AuthenticationError as ex:
@@ -301,6 +305,13 @@ class DbWorker:
         return [dict(zip(columns, row)) for row in rows]
 
     def get_user_friend_info(self, login: str, password: str, friend_id: int):
+        """
+        Получить профиль друга. Требуется авторизация и наличие пользователя в друзьях.
+        :param login:
+        :param password:
+        :param friend_id:
+        :return:
+        """
         try:
             user_id = self.__check_user(login, password)
         except AuthenticationError as ex:
@@ -334,6 +345,13 @@ class DbWorker:
         return [dict(zip(columns, row)) for row in rows]
 
     def get_favorites_by_friend(self, login: str, password: str, friend_id: int):
+        """
+        Получить список избранного от друга. Требуется авторизация и наличие пользователя в друзьях
+        :param login:
+        :param password:
+        :param friend_id:
+        :return:
+        """
         try:
             user_id = self.__check_user(login, password)
         except AuthenticationError as ex:
@@ -387,7 +405,13 @@ class DbWorker:
 
         return [dict(zip(columns, row)) for row in rows]
 
-    def get_reviews_by_item(self, item_id: int):
+    def get_reviews_by_item(self, item_id: int, limit: int = 10):
+        """
+        Получить список отзывов на предмет. Лимит 10 за запрос
+        :param limit: Лимит на выдачу за запрос
+        :param item_id:
+        :return:
+        """
         self.cursor.execute("""
         SELECT
             r.*,
@@ -400,14 +424,20 @@ class DbWorker:
         ON
             r.user_id = u.id
         WHERE
-            r.item_id = ?;
-""", (item_id,))
+            r.item_id = ?
+        LIMIT ?;
+""", (item_id, limit))
         rows = self.cursor.fetchall()
         columns = [column[0] for column in self.cursor.description]
 
         return [dict(zip(columns, row)) for row in rows]
 
     def get_items_by_filter(self, filters: dict):
+        """
+        Получение списка предметов, но под фильтрами
+        :param filters: Чувствительны к ключам, потому что ключи являются названиями столбцов в DB
+        :return:
+        """
         query = "SELECT * FROM items WHERE 1=1"
         params = []
 
