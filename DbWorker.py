@@ -239,6 +239,30 @@ class DbWorker:
             # return {"error": "The user is not logged in", "time": datetime.datetime.now()}
         return user_row[0]
 
+    def check_auth_user(self, login: str, password: str):
+        """
+        Проверяет пользователя на правильность данных для авторизации.
+
+        TODO: должен возвращать токен
+        :param login:
+        :param password:
+        :return:
+        """
+        self.cursor.execute("""
+                                    SELECT id, login, status, phone_number, image, name, surname
+                                    FROM users WHERE (login == ? AND password == ?)
+                                    """, (login, password))
+        row = self.cursor.fetchone()
+
+        if not row:
+            raise AuthenticationError("The user is not logged in")
+
+        # Получаем названия столбцов
+        columns = [column[0] for column in self.cursor.description]
+
+        # Преобразуем в словарь
+        return dict(zip(columns, row))
+
     def get_comments_from_post(self, post_id: int, limit: int = 10):
         """
         Получить все комментарии (лимит 10 на запрос) под конкретным постом

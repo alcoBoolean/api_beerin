@@ -7,6 +7,7 @@ from fastapi import FastAPI, Query, Header
 from fastapi.staticfiles import StaticFiles
 
 from DbWorker import DbWorker
+from error import AuthenticationError
 from logging_config import setup_logger
 
 app = FastAPI()
@@ -130,6 +131,22 @@ async def delete_user(login: str = Header(...), password: str = Header(...)):
     # todo сделать это админ фичёй
 
     return db.delete_user(login, password)
+
+
+@app.get("/auth")
+async def get_user_auth_info(login: str = Header(...), password: str = Header(...)):
+    """
+    Функция проверят валидность данных пользователя для авторизации
+
+    TODO: должен выдавать токен авторизации
+    :param login:
+    :param password:
+    :return:
+    """
+    try:
+        return db.check_auth_user(login, password)
+    except AuthenticationError as ex:
+        return ex.as_dict()
 
 
 @app.get("/like")
