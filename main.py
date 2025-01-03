@@ -10,17 +10,17 @@ from app.routers import items_router, users_router, posts_router
 app = FastAPI()
 
 # Выдача изображений на предметы
-app.mount("/item_image", StaticFiles(directory="item_image"), name="item_image")
+app.mount("/item_image", StaticFiles(directory="images/item_image"), name="item_image")
 
 # Выдача изображений на аватарки пользователей
-app.mount("/user_image", StaticFiles(directory="user_image"),
+app.mount("/user_image", StaticFiles(directory="images/user_image"),
           name="user_image")
 
 # Выдача изображений на посты
-app.mount("/post_image", StaticFiles(directory="post_image"), name="post_image")
+app.mount("/post_image", StaticFiles(directory="images/post_image"), name="post_image")
 
 # Выдача изображений компаний
-app.mount("/business_image", StaticFiles(directory="business_image"),
+app.mount("/business_image", StaticFiles(directory="images/business_image"),
           name="business_image")
 
 # Загрузка всех роутеров запросов
