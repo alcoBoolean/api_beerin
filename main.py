@@ -57,9 +57,12 @@ async def get_item_reviews(item_id: int = Header(..., alias="item_id")):
     :param item_id:
     :return:
     """
-    answer = db.get_reviews_by_item(item_id)
-    return answer
-
+    try:
+        answer = db.get_reviews_by_item(item_id)
+        return answer
+    except Exception as ex:
+        logger.error(ex)
+        raise ex
 
 @app.post("/registration")
 async def registration_new_user(login: str = Header(...), password: str = Header(...),
@@ -313,4 +316,4 @@ if __name__ == "__main__":
         logger.info("========================")
         logger.info("Start API in VPS")
 
-    uvicorn.run("main:app", host=startup_ip, port=8000, reload=True, log_config=f"logs/unicorn_config_log.ini")
+    uvicorn.run("main:app", host=startup_ip, port=80, reload=True, log_config=f"logs/unicorn_config_log.ini")

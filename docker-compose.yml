@@ -7,7 +7,7 @@ services:
     container_name: myapi_app
     restart: always
     expose:
-      - "8000"  # Внутренний порт для FastAPI
+      - "80"  # Внутренний порт для FastAPI
     volumes:
       - .:/app  # Прокидываем проект внутрь контейнера
     command: python main.py  # Просто запускаем main.py
